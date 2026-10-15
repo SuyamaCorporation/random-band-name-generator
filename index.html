@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Random Band Name & Album Art Generator</title>
+<script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-900 text-gray-100 min-h-screen p-4">
+<div class="max-w-2xl mx-auto">
+  <h1 class="text-2xl font-bold text-center mb-2 text-blue-400">Random Band Name Generator</h1>
+  <p class="text-center text-gray-400 text-sm mb-6">Generate a band, album, and cover art</p>
+
+  <div class="flex gap-2 justify-center mb-6">
+    <button onclick="generate()" class="bg-blue-600 hover:bg-blue-700 px-6 py-3 rounded-lg text-base font-bold">Generate Band</button>
+    <button onclick="saveToHistory()" class="bg-gray-600 hover:bg-gray-700 px-4 py-3 rounded-lg text-sm">Save to List</button>
+  </div>
+
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+    <div>
+      <canvas id="albumCanvas" width="300" height="300" class="w-full rounded shadow-2xl border border-gray-700" aria-label="Generated album cover art"></canvas>
+    </div>
+    <div class="bg-gray-800 rounded p-4 flex flex-col justify-center">
+      <div class="text-xs text-gray-500 uppercase tracking-wide mb-1">Band</div>
+      <div id="bandName" class="text-2xl font-bold text-white mb-3">—</div>
+      <div class="text-xs text-gray-500 uppercase tracking-wide mb-1">Album</div>
+      <div id="albumTitle" class="text-lg font-semibold text-blue-300 mb-3">—</div>
+      <div class="text-xs text-gray-500 uppercase tracking-wide mb-1">Genre</div>
+      <div id="genre" class="text-sm text-yellow-400 mb-3">—</div>
+      <div class="text-xs text-gray-500 uppercase tracking-wide mb-1">Year</div>
+      <div id="year" class="text-sm text-gray-400">—</div>
+    </div>
+  </div>
+
+  <div class="bg-gray-800 rounded p-4">
+    <h2 class="text-sm font-semibold text-yellow-400 mb-2">Saved Bands</h2>
+    <div id="history" class="space-y-1 max-h-40 overflow-y-auto text-sm text-gray-300"></div>
+  </div>
+</div>
+
+<script>
+const adjectives = ['Electric','Neon','Frozen','Burning','Silent','Dark','Hollow','Crimson','Velvet','Rusty','Savage','Distant','Phantom','Sonic','Tragic','Broken','Infinite','Dying','Ancient','Golden'];
+const nouns = ['Thunder','Wolves','Angels','Machines','Ghosts','Shadows','Echoes','Mirrors','Storms','Ravens','Fists','Sirens','Vortex','Prophets','Pilots','Monks','Comets','Syndicate','Empire','Alliance'];
+const articles = ['The','','',''];
+const albumWords1 = ['Dawn','Night','Fall','Rise','Storm','Void','Edge','Pulse','Wave','Drift','Crash','Echo','Spiral','Fracture','Signal','Horizon','Asylum','Archive','Cipher','Phantom'];
+const albumWords2 = ['of Eternity','Protocol','Theory','Chronicles','Awakening','Delusion','Paradox','Doctrine','Manifesto','Sequence','Beyond','Frequency','Collapse','Revival','Descent','Redux','v2.0','Unhinged','Reborn','After All'];
+const genres = ['Post-Punk','Shoegaze','Math Rock','Doom Metal','Synthpop','Psychedelic Rock','Nu-Metal','Chamber Pop','Noise Rock','Darkwave','Vaporwave','Prog Metal','Indie Folk','Glam Punk','Ambient Electronic'];
+
+let savedBands = [];
+let currentBand = null;
+
+function rnd(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+function rndInt(a, b) { return Math.floor(Math.random() * (b - a + 1)) + a; }
+
+function generate() {
+  const art = articles.map(a => a).filter(Boolean);
+  const prefix = Math.random() > 0.5 ? rnd(articles) + ' ' : '';
+  const adj = Math.random() > 0.3 ? rnd(adjectives) + ' ' : '';
+  const band = (prefix + adj + rnd(nouns)).trim();
+  const album = rnd(albumWords1) + ' ' + rnd(albumWords2);
+  const genreStr = rnd(genres);
+  const yearStr = rndInt(1975, 2024).toString();
+
+  currentBand = { band, album, genre: genreStr, year: yearStr };
+
+  document.getElementById('bandName').textContent = band;
+  document.getElementById('albumTitle').textContent = album;
+  document.getElementById('genre').textContent = genreStr;
+  document.getElementById('year').textContent = yearStr;
+
+  drawCover(band, album, genreStr);
+}
+
+function drawCover(band, album, genre) {
+  const canvas = document.getElementById('albumCanvas');
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+  ctx.clearRect(0, 0, W, H);
+
+  const genreKey = genre.toLowerCase();
+
+  if (genreKey.includes('metal') || genreKey.includes('punk') || genreKey.includes('doom')) {
+    // Dark geometric
+    const bg1 = `hsl(${rndInt(0,30)},70%,10%)`;
+    const bg2 = `hsl(${rndInt(0,30)},60%,5%)`;
+    const grad = ctx.createLinearGradient(0,0,W,H);
+    grad.addColorStop(0, bg1); grad.addColorStop(1, bg2);
+    ctx.fillStyle = grad; ctx.fillRect(0,0,W,H);
+
+    ctx.strokeStyle = `hsl(${rndInt(0,40)},80%,50%)`;
+    for (let i = 0; i < 8; i++) {
+      ctx.lineWidth = rndInt(1,3);
+      ctx.beginPath();
+      ctx.moveTo(rndInt(0,W), rndInt(0,H));
+      ctx.lineTo(rndInt(0,W), rndInt(0,H));
+      ctx.stroke();
+    }
+    ctx.strokeStyle = `hsl(${rndInt(200,260)},60%,50%)`;
+    ctx.lineWidth = 2;
+    for (let i = 0; i < 5; i++) {
+      const x = W/2 + Math.cos(i/5*Math.PI*2)*rndInt(40,100);
+      const y = H/2 + Math.sin(i/5*Math.PI*2)*rndInt(40,100);
+      ctx.beginPath(); ctx.arc(x, y, rndInt(20,60), 0, Math.PI*2); ctx.stroke();
+    }
+  } else if (genreKey.includes('ambient') || genreKey.includes('shoegaze') || genreKey.includes('wave')) {
+    // Soft gradient noise
+    const h1 = rndInt(180, 300);
+    const grad = ctx.createRadialGradient(W/2, H/2, 0, W/2, H/2, W*0.7);
+    grad.addColorStop(0, `hsl(${h1},70%,30%)`);
+    grad.addColorStop(0.5, `hsl(${h1+40},50%,15%)`);
+    grad.addColorStop(1, `hsl(${h1+80},40%,5%)`);
+    ctx.fillStyle = grad; ctx.fillRect(0,0,W,H);
+    for (let i = 0; i < 200; i++) {
+      const x = rndInt(0, W), y = rndInt(0, H);
+      const r = rndInt(1,4);
+      ctx.fillStyle = `hsla(${h1+rndInt(-30,30)},80%,70%,${Math.random()*0.3})`;
+      ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI*2); ctx.fill();
+    }
+  } else {
+    // Pop/colorful blocks
+    const h = rndInt(0, 360);
+    ctx.fillStyle = `hsl(${h},60%,15%)`; ctx.fillRect(0,0,W,H);
+    for (let i = 0; i < 6; i++) {
+      ctx.fillStyle = `hsla(${h+i*40},70%,50%,0.6)`;
+      const bw = rndInt(40,120), bh = rndInt(40,120);
+      ctx.fillRect(rndInt(0,W-bw), rndInt(0,H-bh), bw, bh);
+    }
+    // Diagonal stripes
+    ctx.strokeStyle = `hsla(${h+180},80%,70%,0.2)`;
+    ctx.lineWidth = 3;
+    for (let i = -H; i < W; i += 30) {
+      ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i+H, H); ctx.stroke();
+    }
+  }
+
+  // Text overlay
+  ctx.fillStyle = 'rgba(0,0,0,0.4)';
+  ctx.fillRect(0, H-100, W, 100);
+
+  // Band name
+  ctx.fillStyle = '#ffffff';
+  ctx.font = 'bold 22px sans-serif';
+  ctx.textAlign = 'center';
+  const maxBandLen = 22;
+  const bandStr = band.length > maxBandLen ? band.slice(0, maxBandLen) + '…' : band;
+  ctx.fillText(bandStr, W/2, H - 65);
+
+  // Album title
+  ctx.fillStyle = '#d1d5db';
+  ctx.font = '14px sans-serif';
+  const maxAlbumLen = 30;
+  const albumStr = album.length > maxAlbumLen ? album.slice(0, maxAlbumLen) + '…' : album;
+  ctx.fillText(albumStr, W/2, H - 40);
+}
+
+function saveToHistory() {
+  if (!currentBand) return;
+  savedBands.unshift(currentBand);
+  if (savedBands.length > 10) savedBands.pop();
+  renderHistory();
+}
+
+function renderHistory() {
+  document.getElementById('history').innerHTML = savedBands.length === 0
+    ? '<div class="text-gray-500">No saved bands yet</div>'
+    : savedBands.map(b => `<div class="flex gap-2 text-xs"><span class="text-yellow-400 font-semibold">${b.band}</span><span class="text-gray-500">—</span><span class="text-gray-400">${b.album}</span><span class="text-gray-600">(${b.genre})</span></div>`).join('');
+}
+
+generate();
+</script>
+</body>
+</html>
